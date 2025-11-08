@@ -27,6 +27,12 @@ def estimate_plane(data):
     # Normalize the normal vector
     normal_normalized = normal / np.linalg.norm(normal)
 
+    result = {}
+    result["normal"] = normal_normalized
+    result["point"] = p1
+
+    return result
+
     # print("Vector 1 (p2-p1):", v1)
     # print("Vector 2 (p3-p1):", v2)
     # print("Normal vector:", normal)
@@ -89,8 +95,6 @@ def estimate_plane(data):
     #     ax.set_title("Plane Estimation: 3 Random Points and Normal Vector")
     #     ax.legend()
     #     plt.show()
-
-    return normal_normalized
 
 
 # reading a ply file and call the estimate_plane function
