@@ -25,9 +25,13 @@ def estimate_plane(data):
     # Calculate normal vector using cross product
     normal = np.cross(v1, v2)
 
-    # Normalize the normal vector
-    normal_normalized = normal / np.linalg.norm(normal)
+    # Ensure the normal vector is valid
+    norm = np.linalg.norm(normal)
+    if norm < 1e-8:  # Degenerate case (collinear points)
+        return float("inf")
+    normal_normalized = normal / norm  # Normalize to unit length
 
+    # Cosider making this a nested numpy array, dictionary access is slower?
     result = {}
     result["normal"] = normal_normalized
     result["point"] = p1
@@ -98,18 +102,19 @@ def estimate_plane(data):
     #     plt.show()
 
 
+# COMMENTING OUT for now, same stuff is in the visualize.ipynb file
 # reading a ply file and call the estimate_plane function
-file_path = "0000000599_0000000846.ply"
-
-ply_data = PlyData.read(file_path)
-vertex_data = ply_data["vertex"]
-
-data_dict = {}
-
-# Extract XYZ coordinates
-x = np.array(vertex_data["x"])
-y = np.array(vertex_data["y"])
-z = np.array(vertex_data["z"])
-data_dict["points"] = np.column_stack((x, y, z))
-
-estimate_plane(data_dict["points"])
+#file_path = "0000000599_0000000846.ply"
+#
+#ply_data = PlyData.read(file_path)
+#vertex_data = ply_data["vertex"]
+#
+#data_dict = {}
+#
+## Extract XYZ coordinates
+#x = np.array(vertex_data["x"])
+#y = np.array(vertex_data["y"])
+#z = np.array(vertex_data["z"])
+#data_dict["points"] = np.column_stack((x, y, z))
+#
+#estimate_plane(data_dict["points"])
