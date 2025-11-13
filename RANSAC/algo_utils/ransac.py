@@ -1,6 +1,6 @@
 class RANSAC:
     # When an initial estimate is provided
-    def RANSAC(data, initial_estimate, estimate_fn, test_fn, thresh, max_retry):
+    def RANSAC(data, initial_estimate, estimate_fn, test_fn, max_retry=10, thresh=0.1):
 
         # Evaluate the initial estimate and return if good enough
         bestEstimate = initial_estimate
