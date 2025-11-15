@@ -1,5 +1,7 @@
 import numpy as np
 from plyfile import PlyData, PlyElement
+import os
+
 
 # import matplotlib.pyplot as plt
 # from mpl_toolkits.mplot3d import Axes3D
@@ -24,13 +26,22 @@ def estimate_plane(data):
 
     # Calculate normal vector using cross product
     normal = np.cross(v1, v2)
-
+    
     # Normalize the normal vector
     normal_normalized = normal / np.linalg.norm(normal)
-
+    
+    
     result = {}
-    result["normal"] = normal_normalized
-    result["point"] = p1
+    # Check for degeneracy (normal too small → points collinear)
+    normal_norm = np.linalg.norm(normal)
+    if normal_norm < 1e-8:
+        return None
+        result["normal"] = None
+        result["point"] = None
+        # Degenerate sample — cannot form a valid plane
+    else:
+        result["normal"] = normal_normalized
+        result["point"] = p1
 
     return result
 
@@ -99,7 +110,7 @@ def estimate_plane(data):
 
 
 # reading a ply file and call the estimate_plane function
-file_path = "0000000599_0000000846.ply"
+file_path = os.path.join(os.path.dirname(__file__), "0000000599_0000000846.ply")
 
 ply_data = PlyData.read(file_path)
 vertex_data = ply_data["vertex"]
