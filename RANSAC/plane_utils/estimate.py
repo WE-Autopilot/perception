@@ -1,8 +1,4 @@
 import numpy as np
-from plyfile import PlyData, PlyElement
-
-# import matplotlib.pyplot as plt
-# from mpl_toolkits.mplot3d import Axes3D
 
 
 # Assuming data is Nx3 numpy array
@@ -30,8 +26,7 @@ def estimate_plane(data):
     if normal_mag < 1e-6:
         return {"normal": np.zeros(3), "point": np.zeros(3), "fail": True}
     normal_normalized = normal / normal_mag
-    
-    
+
     return {"normal": normal_normalized, "point": p1, "fail": False}
 
     # print("Vector 1 (p2-p1):", v1)
@@ -40,22 +35,10 @@ def estimate_plane(data):
     # print("Normalized normal:", normal_normalized)
 
 
-# reading a ply file and call the estimate_plane function
-file_path = "000000599_0000000846.ply"
+# test1 = np.array([[0, 0, 0], [0, 0, 0], [0, 0, 0]])
+# result = estimate_plane(test1)
+# print(result)
 
-ply_data = PlyData.read(file_path)
-vertex_data = ply_data["vertex"]
-
-data_dict = {}
-
-# Extract XYZ coordinates
-x = np.array(vertex_data["x"])
-y = np.array(vertex_data["y"])
-z = np.array(vertex_data["z"])
-data_dict["points"] = np.column_stack((x, y, z))
-
-estimate_plane(data_dict["points"])
-
-# test = np.array([[0, 0, 0], [1, 0, 0], [0, 1, 0]])
-
-# estimate_plane(test)
+# test2 = np.array([[0, 0, 0], [1, 0, 0], [0, 1, 0]])
+# result = estimate_plane(test2)
+# print(result)

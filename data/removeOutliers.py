@@ -18,7 +18,7 @@ def removeOutliers(data, threshold=0.6):
     return data
 
 
-file_path = "../test_data/test104.npy"
+file_path = "data/test_data/test104.npy"
 data = np.load(file_path, allow_pickle=True).item()
 cleaned_data = removeOutliers(data.copy())
 np.save("../test_data_cleaned/test104_cleaned.npy", cleaned_data)
