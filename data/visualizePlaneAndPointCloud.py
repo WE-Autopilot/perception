@@ -59,7 +59,7 @@ def plot_plane_and_points(data, normal, point_on_plane):
     plt.show()
 
 
-file_path = "../test_data/test104.npy"
+file_path = "../test_data_cleaned/test104_cleaned.npy"
 data = np.load(file_path, allow_pickle=True).item()
 normal, point_on_plane = estimate_plane(data["points"])
 
