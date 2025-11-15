@@ -11,7 +11,9 @@ def removeOutliers(data, threshold=0.6):
 
     # Mask for points below the upper bound
     mask = np.where(points[:, 2] <= zUpperBound)[0]  # [0] to just get indicies
-    data["points"] = points[mask]
+    for k, v in data.items():
+        if k is not None and v is not None:
+            data[k] = data[k][mask]
 
     return data
 
