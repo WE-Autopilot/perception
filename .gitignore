@@ -205,3 +205,11 @@ cython_debug/
 marimo/_static/
 marimo/_lsp/
 __marimo__/
+
+
+# Stop sign detection files
+StopSignDetection_YOLO/Stop-Sign-3/
+StopSignDetection_YOLO/test_img/
+StopSignDetection_YOLO/runs/
+runs/
+.DS_Store
