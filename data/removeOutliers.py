@@ -2,7 +2,7 @@ import numpy as np
 
 
 # Remove outliers based on Z-axis threshold
-def removeOutliers(data, threshold=0.6):
+def removeOutliers(data, threshold=0.8):
 
     points = data["points"]
     zMin, zMax = np.min(points[:, 2]), np.max(points[:, 2])

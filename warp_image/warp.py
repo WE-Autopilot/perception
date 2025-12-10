@@ -9,31 +9,95 @@ sys.path.insert(0, parent_dir)
 
 import onnx_model_old.testModel_execute as onnx
 
-file_name = "warp_image/sddefault"
-ext = ".jpg"
+file_name = "warp_image/0000000114"
+ext = ".png"
 # run onnx model to get lanes
 img, lanes = onnx.main(file_name + ext)
 
+all_points = []
+for lane in lanes:
+    all_points.extend(lane)
+
+print("number of points", len(all_points))
 # currently just warping to min-max rectangle, could be improved to a trapezoid more in line with lane positions
 boundaries = {
-    "minx": min(x for x, y in lanes[0]),
-    "maxx": max(x for x, y in lanes[0]),
-    "miny": min(y for x, y in lanes[0]),
-    "maxy": max(y for x, y in lanes[0]),
+    "minx": min(x for x, y in all_points),
+    "maxx": max(x for x, y in all_points),
+    "miny": min(y for x, y in all_points),
+    "maxy": max(y for x, y in all_points),
 }
+# PIXEL_MARGIN = 50
+# topBits = []
+# for x, y in all_points:
+#     if y in range(boundaries["miny"] - PIXEL_MARGIN, boundaries["miny"] + PIXEL_MARGIN):
+#         topBits.append(x)
+
+# bottomBits = []
+# for x, y in all_points:
+#     if y in range(boundaries["maxy"] - PIXEL_MARGIN, boundaries["maxy"] + PIXEL_MARGIN):
+#         bottomBits.append(x)
+
+# print(len(topBits), topBits)
+# topBitsBoundaries = {
+#     "minx": min(topBits),
+#     "maxx": max(topBits),
+# }
+
+# print(len(bottomBits), bottomBits)
+# bottomBitsBoundaries = {
+#     "minx": min(bottomBits),
+#     "maxx": max(bottomBits),
+# }
+
+# pts_src = np.float32(
+#     [
+#         [topBitsBoundaries["minx"], boundaries["miny"]],  # top-left
+#         [topBitsBoundaries["maxx"], boundaries["miny"]],  # top-right
+#         [bottomBitsBoundaries["minx"], boundaries["maxy"]],  # bottom-left
+#         [bottomBitsBoundaries["maxx"], boundaries["maxy"]],  # bottom-right
+#     ]
+# )
+
+# Sort points by Y coordinate
+sorted_points = sorted(all_points, key=lambda p: p[1])
+
+# Get top 10% and bottom 10% of points
+num_points = len(sorted_points)
+top_count = max(2, int(num_points * 0.1))  # at least 2 points
+bottom_count = max(2, int(num_points * 0.1))
+
+top_points = sorted_points[:top_count]
+bottom_points = sorted_points[-bottom_count:]
+
+# Get boundaries
+top_boundaries = {
+    "minx": min(x for x, y in top_points),
+    "maxx": max(x for x, y in top_points),
+    "y": min(y for x, y in top_points),  # use the minimum Y
+}
+
+bottom_boundaries = {
+    "minx": min(x for x, y in bottom_points),
+    "maxx": max(x for x, y in bottom_points),
+    "y": max(y for x, y in bottom_points),  # use the maximum Y
+}
+
 pts_src = np.float32(
     [
-        [boundaries["minx"], boundaries["miny"]],  # top-left
-        [boundaries["maxx"], boundaries["miny"]],  # top-right
-        [boundaries["maxx"], boundaries["maxy"]],  # bottom-right
-        [boundaries["minx"], boundaries["maxy"]],  # bottom-left
+        [top_boundaries["minx"], top_boundaries["y"]],  # top-left
+        [top_boundaries["maxx"], top_boundaries["y"]],  # top-right
+        [bottom_boundaries["minx"], bottom_boundaries["y"]],  # bottom-left
+        [bottom_boundaries["maxx"], bottom_boundaries["y"]],  # bottom-right
     ]
 )
 
 
+print("Source points for homography:\n", pts_src)
+
+
 # Desired output rectangle size
 width, height = 800, 800
-pts_dst = np.float32([[0, 0], [width, 0], [width, height], [0, height]])
+pts_dst = np.float32([[0, 0], [width, 0], [0, height], [width, height]])
 
 
 # Compute homography
