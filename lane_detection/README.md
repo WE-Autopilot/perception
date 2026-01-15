@@ -118,7 +118,9 @@ You should see:
 Use the image publisher:
 
 ```bash
-ros2 run perception_onnx image_publisher --ros-args -p image_folder:=/path/to/images
+ros2 run perception_onnx image_publisher --ros-args \
+    -p image_folder:=/home/(your username)/perception_ws/src/perception/perception_onnx/test_images \
+    -p publish_rate:=1.0
 ```
 
 This publishes images to:
