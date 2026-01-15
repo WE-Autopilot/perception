@@ -1,180 +1,148 @@
-# UFLD ONNX Lane Detection (ROS2 Jazzy)
+# Lane Detection — ONNX Runtime (ROS2)
 
-This package integrates **Ultra-Fast Lane Detection (UFLD)** into the WE-Autopilot perception stack using **ONNX Runtime**.  
-It replaces the original TensorRT backend with a clean, portable ONNX inference pipeline.
+This package provides a **ROS2-compatible Ultra-Fast Lane Detection (UFLD) pipeline**
+using **ONNX Runtime**. It replaces the legacy TensorRT-based implementation and is
+designed to run **portably on any machine** without GPU or TensorRT dependencies.
 
----
-
-## 🚗 Overview
-
-This package provides:
-
-- A ROS2 node (`ufld_onnx_node`) that:
-  - Loads an ONNX lane-detection model  
-  - Subscribes to `/camera/image_raw`
-  - Runs preprocessing + ONNX inference  
-  - Publishes model outputs on `/ufld/raw_output`
-
-- An image publisher (`image_publisher`) for testing with offline images.
+The pipeline supports:
+- Offline image-based testing
+- ONNX model inference
+- ROS2 topic-based data flow
+- Visualization via RViz2
 
 ---
 
-## 📦 Package Structure
+## Package Overview
 
-```
-perception_onnx/
-│
-├── models/
-│   └── culane_res34.onnx           # UFLD ONNX model (tracked via Git LFS)
-│
-├── perception_onnx/
-│   ├── ufld_onnx_inference.py      # ONNX preprocessing + inference class
-│   ├── postprocessing.py           # (optional future decoding logic)
-│   └── nodes/
-│       ├── ufld_onnx_node.py       # Main ROS2 node
-│       └── image_publisher.py      # Test image publisher
-│
-├── setup.py
-├── setup.cfg
-├── package.xml
-└── README.md
-```
+The pipeline consists of **three ROS2 nodes**:
+
+| Node | Description |
+|-----|------------|
+| `camera_image_publisher` | Publishes images from a local folder as `/camera/image_raw` |
+| `ufld_onnx_node` | Runs ONNX Runtime inference and publishes raw model outputs |
+| `ufld_visualizer` | Visualizes camera input and (optionally) lane annotations |
 
 ---
 
-## 🧰 Dependencies
+## Prerequisites
 
-### Install ONNX Runtime + OpenCV
+- ROS2 (Humble or compatible)
+- Python 3
+- `onnxruntime`
+- `opencv-python`
+- `cv_bridge`
 
-Use a virtual environment to avoid numpy version conflicts:
-
-```bash
-python3 -m venv onnx_venv
-source onnx_venv/bin/activate
-
-pip install onnxruntime opencv-python numpy pyyaml
-```
-
-### ROS2 Dependencies
-
-Installed automatically with:
-
-```bash
-sudo apt install ros-jazzy-cv-bridge ros-jazzy-image-transport
-```
-
----
-
-## 🔧 Build Instructions (ROS2 Workspace)
-
-Assuming your workspace is:
-
-```
-~/perception_ws/
-```
-
-Build the package:
+Build the workspace:
 
 ```bash
 cd ~/perception_ws
 colcon build --symlink-install
 source install/setup.bash
-```
 
----
+Running the Pipeline
 
-## ▶️ Running the Lane Detection Node
+You must run the nodes in the following order, each in a separate terminal.
 
-### 1. Activate your ONNX virtual environment
+Terminal 1 — Camera Image Publisher
 
-```bash
-source onnx_venv/bin/activate
-```
+This node simulates a camera feed by publishing images from a local directory.
 
-### 2. Source ROS2 workspace
+⚠️ Images are not included in the repository and must remain local.
+Supported formats: .png, .jpg, .jpeg.
 
-```bash
 source ~/perception_ws/install/setup.bash
-```
+ros2 run lane_detection camera_image_publisher \
+  --ros-args -p image_folder:=/absolute/path/to/your/images
 
-### 3. Run the ONNX node
+Verify publishing
+ros2 topic hz /camera/image_raw
 
-```bash
-ros2 run perception_onnx ufld_onnx_node
-```
+Terminal 2 — ONNX UFLD Inference Node
 
-You should see:
+This node:
 
-```
-[INFO] Using ONNX model: .../models/culane_res34.onnx
-[INFO] Subscribed to /camera/image_raw
-[INFO] Publishing UFLD outputs on /ufld/raw_output
-```
+Loads the ONNX UFLD model
 
----
+Applies preprocessing
 
-## 📤 Running with Offline Test Images
+Runs inference
 
-Use the image publisher:
+Publishes raw ONNX outputs
 
-```bash
-ros2 run perception_onnx image_publisher --ros-args \
-    -p image_folder:=/home/(your username)/perception_ws/src/perception/perception_onnx/test_images \
-    -p publish_rate:=1.0
-```
+source ~/perception_ws/install/setup.bash
+ros2 run lane_detection ufld_onnx_node
 
-This publishes images to:
+Terminal 3 — Visualization Node
 
-```
+Subscribes to:
+
 /camera/image_raw
-```
 
-The ONNX node will automatically process them.
+/ufld/raw_output
 
----
+Publishes:
 
-## 📡 ROS2 Topics
+/ufld/debug_image
 
-| Topic                  | Type                     | Description                        |
-|------------------------|--------------------------|------------------------------------|
-| `/camera/image_raw`    | sensor_msgs/Image        | Input images                       |
-| `/ufld/raw_output`     | Float32MultiArray*       | Raw model output tensors           |
+source ~/perception_ws/install/setup.bash
+ros2 run lane_detection ufld_visualizer
 
-(*) A custom lane message will be added in the future.
+Terminal 4 — RViz2
+rviz2
 
----
+RViz Configuration
 
-## 🔄 Pipeline Diagram
+Add → Image
 
-```
-+---------------------+      +------------------------+
-|  Image Publisher    | ---> |  ufld_onnx_node        |
-| (/camera/image_raw) |      |  - Preprocess          |
-|                     |      |  - ONNX Inference      |
-+---------------------+      |  - Publish Outputs     |
-                             +-----------+------------+
-                                         |
-                                         v
-                                /ufld/raw_output
-```
+Topic: /ufld/debug_image
 
----
+Reliability Policy: Best Effort
 
-## 🛠 Future Work
+History Policy: Keep Last
 
-- Implement full lane decoding (polylines)
-- Publish a custom `LaneArray` ROS2 message
-- Integrate into perception stack visualization
+Expected Topics
+ros2 topic list
 
----
+/camera/image_raw
+/ufld/raw_output
+/ufld/debug_image
 
-## 👤 Author
+Lane Annotation Status (Important)
 
-Implemented by **Zayan Khan**  
-WE-Autopilot Perception Team
+Lane annotations are intentionally disabled for the provided ONNX model.
 
----
+Why
 
-## ✔ License
+ONNX output size: 57600
 
-This package follows the main repository license.
+Classic UFLD grid expects: 4 × 101 × 20 = 8080
+
+Output semantics do not match grid-based decoding
+
+Applying classic decoding would be incorrect.
+
+Current State
+
+✔ ONNX inference works
+
+✔ ROS2 pipeline works
+
+✔ Visualization works
+
+⚠ Lane decoding pending correct output specification
+
+Design Notes
+
+ONNX Runtime used for portability
+
+Input shape (1 × 3 × H × W) preserved
+
+Raw outputs published for downstream use
+
+Decoding deferred by design
+
+Summary
+
+This package delivers a clean ONNX-based UFLD pipeline for ROS2 with correct inference
+and visualization. Lane decoding is intentionally deferred until model output
+semantics are confirmed.
