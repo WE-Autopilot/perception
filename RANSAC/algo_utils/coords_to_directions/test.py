@@ -10,9 +10,10 @@ def main():
     Cx, Cy = 640, 320
     # focal length
     Fx, Fy = 800, 800
-    start_time = time.time()
-    directions = coords_to_directions_unvectorized(coords, Cx, Cy, Fx, Fy)
-    print("total time", time.time() - start_time)
+
+    # start_time = time.time()
+    # directions = coords_to_directions_unvectorized(coords, Cx, Cy, Fx, Fy)
+    # print("total time", time.time() - start_time)
 
     start_time = time.time()
     directions = coords_to_directions(coords, Cx, Cy, Fx, Fy)
