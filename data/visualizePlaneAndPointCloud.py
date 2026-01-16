@@ -59,9 +59,9 @@ def plot_plane_and_points(data, normal, point_on_plane):
     plt.show()
 
 
-file_path = "../RANSAC/test_data_cleaned/test104_cleaned.npy"
-data = np.load(file_path, allow_pickle=True).item()
-result = estimate_plane(data["points"])
+# file_path = "../RANSAC/test_data_cleaned/test104_cleaned.npy"
+# data = np.load(file_path, allow_pickle=True).item()
+# result = estimate_plane(data["points"])
 
 
-plot_plane_and_points(data, result["normal"], result["point"])
+# plot_plane_and_points(data, result["normal"], result["point"])
