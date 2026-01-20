@@ -24,6 +24,7 @@ setup(
     entry_points={
         "console_scripts": [
             "groundPlaneNode = mapping_interface.groundPlaneNode:main",
+            "pointCloudPublisher = mapping_interface.pointCloudPublisher:main",
         ],
     },
 )
