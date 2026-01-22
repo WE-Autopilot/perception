@@ -6,10 +6,14 @@ from rclpy.node import Node
 from sensor_msgs.msg import PointCloud2
 import sensor_msgs_py.point_cloud2 as pc2
 
-# from .RANSAC.algo_utils import ransac
-from .RANSAC.plane_utils import estimate
-from .RANSAC.plane_utils import test
-from .RANSAC.algo_utils import ransac
+import sys
+
+print("Python exec:", sys.executable)
+print("First few sys.path entries:", sys.path[:5])
+
+from plane_utils import estimate
+from plane_utils import test
+from algo_utils import ransac
 import numpy as np
 
 
@@ -33,7 +37,7 @@ class groundPlaneNode(Node):
         test1 = np.array([[0, 0, 0], [1, 0, 0], [0, 1, 0]])
 
         ransacEstimation = ransac.RANSAC_noInit(
-            data=test1,
+            data=array,
             estimate_fn=estimate.estimate_plane,
             test_fn=test.test_plane,
             thresh=5,
