@@ -2,9 +2,10 @@
 import rclpy
 from rclpy.node import Node
 
-
 from sensor_msgs.msg import PointCloud2
 import sensor_msgs_py.point_cloud2 as pc2
+from geometry_msgs.msg import Vector3
+
 
 import sys
 
@@ -43,7 +44,27 @@ class groundPlaneNode(Node):
             thresh=5,
             max_retry=10,
         )
-        print(ransacEstimation)
+        # print(ransacEstimation)
+        self.normal_pub = self.create_publisher(Vector3, "normal", 10)
+        self.point_pub = self.create_publisher(Vector3, "point", 10)
+
+        normal_msg = Vector3()
+        normal_msg.x = float(ransacEstimation["normal"][0])
+        normal_msg.y = float(ransacEstimation["normal"][1])
+        normal_msg.z = float(ransacEstimation["normal"][2])
+        self.normal_pub.publish(normal_msg)
+        self.get_logger().info(
+            f"Published normal: {normal_msg.x}, {normal_msg.y}, {normal_msg.z}"
+        )
+
+        point_msg = Vector3()
+        point_msg.x = float(ransacEstimation["point"][0])
+        point_msg.y = float(ransacEstimation["point"][1])
+        point_msg.z = float(ransacEstimation["point"][2])
+        self.point_pub.publish(point_msg)
+        self.get_logger().info(
+            f"Published point: {point_msg.x}, {point_msg.y}, {point_msg.z}"
+        )
 
 
 def main(args=None):
