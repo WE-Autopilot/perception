@@ -29,14 +29,18 @@ class groundPlaneNode(Node):
         )
 
     def callback(self, msg):
-        points = []
-        for p in pc2.read_points(msg, skip_nans=True):
-            points.append([p[0], p[1], p[2]])
-        array = np.array(points, dtype=np.float32)
+        start_time = self.get_clock().now()
+
+        # Fast conversion: structured array → contiguous numpy array
+        pts = pc2.read_points_numpy(msg, field_names=("x", "y", "z"), skip_nans=True)
+        array = pts.astype(np.float32)
 
         # just using a static np array rn for testing
         test1 = np.array([[0, 0, 0], [1, 0, 0], [0, 1, 0]])
-
+        print(
+            "Time to sort points: ",
+            (self.get_clock().now() - start_time).nanoseconds / 1e6,
+        )
         ransacEstimation = ransac.RANSAC_noInit(
             data=array,
             estimate_fn=estimate.estimate_plane,
@@ -65,6 +69,8 @@ class groundPlaneNode(Node):
         self.get_logger().info(
             f"Published point: {point_msg.x}, {point_msg.y}, {point_msg.z}"
         )
+        end_time = self.get_clock().now()
+        print("RANSAC Time (ms): ", (end_time - start_time).nanoseconds / 1e6)
 
 
 def main(args=None):

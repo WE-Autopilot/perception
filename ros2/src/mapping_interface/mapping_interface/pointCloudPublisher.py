@@ -54,7 +54,7 @@ class PointCloudPublisher(Node):
         msg.data = cloud_data
 
         self.publisher_.publish(msg)
-        self.get_logger().info("Published PointCloud2!")
+        self.get_logger().info(f"Published {len(points)} points.")
 
 
 def main(args=None):
