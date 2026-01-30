@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 import rclpy
 from rclpy.node import Node
+from plyfile import PlyData
 from sensor_msgs.msg import PointCloud2, PointField
 import numpy as np
 import struct
@@ -14,9 +15,20 @@ class PointCloudPublisher(Node):
         self.timer = self.create_timer(1.0, self.timer_callback)
 
     def timer_callback(self):
-        # Example: create 5 points
 
-        points = [(0, 0, 0), (1, 0, 0), (0, 1, 0), (0, 0, 1), (1, 1, 0)]
+        file_path = "src/mapping_interface/mapping_interface/0000000599_0000000846.ply"
+
+        ply_data = PlyData.read(file_path)
+        vertex_data = ply_data["vertex"]
+
+        data_dict = {}
+
+        # Extract XYZ coordinates
+        x = np.array(vertex_data["x"])
+        y = np.array(vertex_data["y"])
+        z = np.array(vertex_data["z"])
+        data_dict["points"] = np.column_stack((x, y, z))
+        points = data_dict["points"]
 
         # Convert to bytes
         cloud_data = b"".join([struct.pack("fff", *p) for p in points])
