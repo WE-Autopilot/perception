@@ -99,7 +99,7 @@ class UFLDv2_ONNX:
         return [coords[2], coords[0][::-1], coords[1], coords[3]]
 
 
-    def __call__(self, img):
+    def __call__(self, img, smooth=True):
         im0 = img.copy()
 
         # ---- PREPROCESSING ----
@@ -122,7 +122,9 @@ class UFLDv2_ONNX:
         coords = self.pred2coords(preds)
         smooth_coords, lane_exists = self.smooth_anchors(coords)
 
-        return smooth_coords, lane_exists
+        if smooth:
+            return smooth_coords, lane_exists
+        return coords, lane_exists
 
     def lane_lerp(self, coords):
         coords = np.array(coords)
@@ -144,11 +146,9 @@ class UFLDv2_ONNX:
             lane_exists.append(len(lane_coords) >= self.wp_thresh)
             if len(lane_coords) < self.wp_thresh:
                 smooth_coords.append([[0, 0] for _ in range(self.num_wps)])
-                print(len(smooth_coords[-1]))
                 continue
 
             smooth_coords.append(self.lane_lerp(lane_coords))
-            print(len(smooth_coords[-1]))
 
         return np.array(smooth_coords, dtype=np.int64), lane_exists
 
