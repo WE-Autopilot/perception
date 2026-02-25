@@ -92,7 +92,7 @@ if __name__ == "__main__":
 
         return points
 
-    points = gen_plane(np.array([[1, 0, 0], [0, 1, 0]]), noise=0.5, noise_min=-10, noise_max=10)
+    points = gen_plane(np.array([[1, 0, 0], [0, 1, 0]]), noise=0.9, noise_min=-10, noise_max=10)
 
     ransac = ransac_factory()
     initial_estimate = {"point": np.array([0, 0, 0]), "normal": np.array([0, 0.05, 1]), "failed": True}
