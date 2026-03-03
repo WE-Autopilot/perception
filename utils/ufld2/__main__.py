@@ -1,5 +1,7 @@
 import cv2
+import numpy as np
 import argparse
+from time import time
 
 from . import *
 
@@ -37,7 +39,7 @@ args = get_args()
 print(f"Reading {args.video_path}...")
 cap = cv2.VideoCapture(args.video_path)
 #model = UFLDv2_ONNX(args.onnx_path, args.config_path, args.ori_size)
-model = UFLDv2_ONNX(args.ori_size)
+model = UFLDONNX(args.ori_size)
 
 while True:
     success, _img = cap.read()
@@ -45,9 +47,11 @@ while True:
         break
     img = _img
 
+    start = time()
     coords, lane_exists = model(img)
+    end = time()
 
-    print()
+    print(f"time: {(end - start) * 1000:.1f}ms")
     for i in range(4):
         if len(coords[i]) > 0:
             print(f"[{i}] len: {len(coords[i])} | delta: {np.diff(np.array(coords[i])[:, 0]).mean()}")
