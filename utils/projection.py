@@ -57,4 +57,4 @@ def box_select_points(K, points, boxes):
         item_centroid = get_centroid(item_points)
         item_centroids.append(item_centroid)
 
-    return item_centroids
+    return np.vstack(item_centroids)
