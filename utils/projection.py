@@ -7,7 +7,7 @@ def pointcloud_to_pixel(K, points):
     xy = points[:, :2]
     z = points[:, 2:3]
     coords = f * (xy / z) + c
-    return 
+    return coords
 
 
 def get_dir_vec(K, coords):
@@ -23,11 +23,38 @@ def get_plane_inter(rays, plane, ray_disp=0):
     normal = plane["normal"]
     point = plane["point"] - ray_disp
     factor = (point @ normal) / (rays @ normal)
-    inter = rays * factor + ray_disp
+    inter = rays * factor[..., None] + ray_disp
     return inter
+
+
+def check_box(coords, box):
+    BOX_COMP = np.array([0, 1])
+    bounds = box.reshape(2, 2).T
+    comps = coords[..., None] < bounds
+    mask = (comps == BOX_COMP).all(axis=(-2, -1))
+    return mask
 
 
 def ground_proj(K, wp, plane, ray_disp=0):
     rays = get_dir_vec(K, wp)
     proj_wp = get_plane_inter(rays, plane, ray_disp)
     return proj_wp
+
+
+def get_centroid(points):
+    points = points.reshape(-1, 3)
+    centroid = np.median(points, axis=0)
+    return centroid
+
+
+def box_select_points(K, points, boxes):
+    coords = pointcloud_to_pixel(K, points)
+
+    item_centroids = []
+    for box in boxes:
+        mask = check_box(coords, box)
+        item_points = coords[mask]
+        item_centroid = get_centroid(item_points)
+        item_centroids.append(item_centroid)
+
+    return item_centroids
