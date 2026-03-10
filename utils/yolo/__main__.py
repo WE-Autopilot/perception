@@ -1,14 +1,13 @@
 from PIL import Image
-from ultralytics import YOLO
-from pathlib import Path
 import cv2
 import numpy as np
 
+from .yolo import YOLO
+
 
 img = np.array(Image.open("stop.jpeg"))
-curr_path = Path(__file__).resolve().parent
-model = YOLO(f"{curr_path}/yolo11n.pt", verbose=False, task="detect")
-results = model(img, classes=[11], verbose=True)
+model = YOLO()
+results = model(img, classes=[11], verbose=False)
 
 img_cv = cv2.cvtColor(img, cv2.COLOR_RGB2BGR)
 
