@@ -1,7 +1,7 @@
 import numpy as np
 
 from .utils import prune_distal, ground_ransac_factory
-from .plane import Plane
+from ._plane import Plane
 
 
 _DEFAULT_ESTIMATE = Plane([0, 0, 0], [0, 1, 0], True)

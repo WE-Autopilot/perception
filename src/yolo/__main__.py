@@ -3,7 +3,7 @@ import cv2
 import numpy as np
 from pathlib import Path
 
-from .yolo import YOLO
+from ._yolo import YOLO
 
 
 img_path = f"{Path(__file__).resolve().parent}/stop.jpeg"

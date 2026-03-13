@@ -1,5 +1,5 @@
 import numpy as np
-from .plane import Plane
+from ._plane import Plane
 
 
 def get_plane_dist(data, estimate):

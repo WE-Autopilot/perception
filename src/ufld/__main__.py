@@ -3,7 +3,7 @@ import numpy as np
 import argparse
 from time import time
 
-from .ufld_onnx import UFLDONNX
+from ._ufld_onnx import UFLDONNX
 
 def get_args():
     parser = argparse.ArgumentParser()

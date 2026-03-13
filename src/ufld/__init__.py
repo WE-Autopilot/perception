@@ -1,3 +1,3 @@
-from .ufld_onnx import UFLDONNX
+from ._ufld_onnx import UFLDONNX
 
 

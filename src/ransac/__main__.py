@@ -2,7 +2,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 from .ground_ransac import GroundRANSAC
-from .plane import Plane
+from ._plane import Plane
 
 
 def gen_plane(directions=np.array([[1, 0, 0], [0, 1, 0]]), disp=0, size=(10, 10), dir_len=20, noise=0.2, noise_min=-1, noise_max=1):
