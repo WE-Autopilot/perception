@@ -3,7 +3,7 @@ import numpy as np
 import argparse
 from time import time
 
-from . import *
+from .ufld_onnx import UFLDONNX
 
 def get_args():
     parser = argparse.ArgumentParser()
@@ -38,7 +38,6 @@ def get_args():
 args = get_args()
 print(f"Reading {args.video_path}...")
 cap = cv2.VideoCapture(args.video_path)
-#model = UFLDv2_ONNX(args.onnx_path, args.config_path, args.ori_size)
 model = UFLDONNX(args.ori_size)
 
 while True:
