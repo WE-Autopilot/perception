@@ -19,8 +19,9 @@ def gen_plane(directions=np.array([[1, 0, 0], [0, 1, 0]]), disp=0, size=(10, 10)
     return points
 
 points = gen_plane(np.array([[1, 0, 0], [0, 1, 0]]), noise=0.9, noise_min=-10, noise_max=10)
+initial_estimate = {"point": np.array([0, 0, 0]), "normal": np.array([0, 0.05, 1]), "failed": True}
 
-ransac = GroundRANSAC({"point": np.array([0, 0, 0]), "normal": np.array([0, 0.05, 1]), "failed": True})
+ransac = GroundRANSAC(initial_estimate)
 estimate = ransac(points)
 
 print(f"Estimate: {estimate}\nScore: {ransac.get_score() * 100:.2f}%")
