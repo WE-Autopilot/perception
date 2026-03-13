@@ -1,11 +1,13 @@
 from PIL import Image
 import cv2
 import numpy as np
+from pathlib import Path
 
 from .yolo import YOLO
 
 
-img = np.array(Image.open("stop.jpeg"))
+img_path = f"{Path(__file__).resolve().parent}/stop.jpeg"
+img = np.array(Image.open(img_path))
 model = YOLO()
 boxes, img_cls = model.forward(img)
 points = np.random.randn(100, 3)
@@ -26,6 +28,7 @@ for box in boxes:
     cv2.circle(img_cv, (x2, y2), 5, (255, 0, 0), -1)
 
 cv2.imshow("Output", img_cv)
-cv2.waitKey(0)
+while cv2.waitKey(1) & 0xFF != ord('q'):
+    pass
 cv2.destroyAllWindows()
 

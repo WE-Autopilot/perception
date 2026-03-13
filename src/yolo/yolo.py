@@ -8,17 +8,17 @@ from ..projection import box_select_points
 class YOLO:
     def __init__(self, classes=[11], K=None, model_path=None):
         if model_path == None:
-            model_path = Path(__file__).resolve().parent
+            model_path = f"{Path(__file__).resolve().parent}/yolo11n.pt"
 
         self.K = K
-        self.model = _YOLO(f"{model_path}/yolo11n.pt", verbose=False, task="detect")
+        self.model = _YOLO(model_path, verbose=False, task="detect")
         self.classes = classes
 
     
     def forward(self, img):
         results = self.model(img, classes=[11], verbose=False)[0]
-        img_cls = np.array(results.boxes.cls)
-        boxes = np.array(results.boxes.xyxy)
+        img_cls = results.boxes.cls.cpu().numpy()
+        boxes = results.boxes.xyxy.cpu().numpy()
         return boxes, img_cls
 
     def __call__(self, img, points, K=None):
