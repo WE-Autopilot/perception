@@ -1,9 +1,10 @@
 import numpy as np
 
 from .utils import prune_distal, ground_ransac_factory
+from .plane import Plane
 
 
-_DEFAULT_ESTIMATE = {"point": np.array([0, 0, 0]), "normal": np.array([0, 1, 0]), "failed": True}
+_DEFAULT_ESTIMATE = Plane([0, 0, 0], [0, 1, 0], True)
 
 
 class GroundRANSAC:

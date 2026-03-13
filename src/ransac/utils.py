@@ -1,9 +1,10 @@
 import numpy as np
+from .plane import Plane
 
 
 def get_plane_dist(data, estimate):
-    diffs = data - estimate["point"]
-    distances = np.abs(diffs @ estimate["normal"])
+    diffs = data - estimate.point
+    distances = np.abs(diffs @ estimate.normal)
 
     return distances
 
@@ -24,15 +25,11 @@ def estimate_plane(data):
 
     normal = np.cross(v1, v2)
 
-    normal_mag = np.linalg.norm(normal)
-    if normal_mag < 1e-6:
-        return {"normal": normal, "point": p1, "failed": True}
-
-    return {"normal": normal / normal_mag, "point": p1, "failed": False}
+    return Plane(normal, p1)
 
 
 def test_plane(data, estimate, thresh=1):
-    if estimate.get("failed"):
+    if estimate.failed:
         return 0
 
     distances = get_plane_dist(data, estimate)
@@ -49,7 +46,7 @@ def generic_ransac(data, initial_estimate, estimate_fn, test_fn, max_retry=10, t
 
     for _ in range(max_retry):
         estimate = estimate_fn(data)
-        if estimate.get("failed"):
+        if estimate.failed:
             continue
 
         score = test_fn(data, estimate)
