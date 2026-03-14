@@ -29,7 +29,7 @@ class UFLDONNX:
         self.num_wps = num_wps
         self.wp_thresh = wp_thresh
 
-        cfg = load_config(config_path)
+        cfg = _load_config(config_path)
         self.ori_img_w, self.ori_img_h = ori_size
         self.cut_height = int(self.ori_img_h * (1 - cfg.crop_ratio))
         self.input_width = cfg.train_width
@@ -99,6 +99,31 @@ class UFLDONNX:
         # kinda cooked you gotta do this
         return [coords[2], coords[0][::-1], coords[1], coords[3]]
 
+    def lane_lerp(self, coords):
+        coords = np.array(coords)
+        ys = coords[:, 0]
+        y_bounds = np.linspace(ys.min(), ys.max(), self.num_wps + 1)
+
+        smooth_coords = []
+        for y_beg, y_end in zip(y_bounds[:-1], y_bounds[1:]):
+            points = coords[(ys >= y_beg) & (ys <= y_end)]
+            smooth_coords.append(points.mean(axis=0))
+
+        return smooth_coords
+
+    def smooth_anchors(self, coords):
+        smooth_coords = []
+        lane_exists = []
+
+        for lane_coords in coords:
+            lane_exists.append(len(lane_coords) >= self.wp_thresh)
+            if len(lane_coords) < self.wp_thresh:
+                smooth_coords.append([[0, 0] for _ in range(self.num_wps)])
+                continue
+
+            smooth_coords.append(self.lane_lerp(lane_coords))
+
+        return np.array(smooth_coords, dtype=np.int64), lane_exists
 
     def __call__(self, img, smooth=True):
         im0 = img.copy()
@@ -127,34 +152,8 @@ class UFLDONNX:
             return smooth_coords, lane_exists
         return coords, lane_exists
 
-    def lane_lerp(self, coords):
-        coords = np.array(coords)
-        ys = coords[:, 0]
-        y_bounds = np.linspace(ys.min(), ys.max(), self.num_wps + 1)
 
-        smooth_coords = []
-        for y_beg, y_end in zip(y_bounds[:-1], y_bounds[1:]):
-            points = coords[(ys >= y_beg) & (ys <= y_end)]
-            smooth_coords.append(points.mean(axis=0))
-
-        return smooth_coords
-
-    def smooth_anchors(self, coords):
-        smooth_coords = []
-        lane_exists = []
-
-        for lane_coords in coords:
-            lane_exists.append(len(lane_coords) >= self.wp_thresh)
-            if len(lane_coords) < self.wp_thresh:
-                smooth_coords.append([[0, 0] for _ in range(self.num_wps)])
-                continue
-
-            smooth_coords.append(self.lane_lerp(lane_coords))
-
-        return np.array(smooth_coords, dtype=np.int64), lane_exists
-
-
-def load_config(config_path):
+def _load_config(config_path):
     config_path = os.path.abspath(config_path)
     module_name = os.path.splitext(os.path.basename(config_path))[0]
     spec = importlib.util.spec_from_file_location(module_name, config_path)

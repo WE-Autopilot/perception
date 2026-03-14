@@ -20,8 +20,8 @@ def get_dir_vec(K, coords):
 
 
 def get_plane_inter(rays, plane, ray_disp=0):
-    normal = plane["normal"]
-    point = plane["point"] - ray_disp
+    normal = plane.normal
+    point = plane.point - ray_disp
     factor = (point @ normal) / (rays @ normal)
     inter = rays * factor[..., None] + ray_disp
     return inter
