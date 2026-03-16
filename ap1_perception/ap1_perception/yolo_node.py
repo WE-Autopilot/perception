@@ -94,11 +94,9 @@ class YoloNode(Node):
 
         color = self._bridge.imgmsg_to_cv2(color_msg, desired_encoding='rgb8')
 
-        # sensor_msgs_py.point_cloud2 parses the binary blob in the PointCloud2 message
-        xyz = np.array(
-            list(pc2.read_points(pc_msg, field_names=('x', 'y', 'z'), skip_nans=True)),
-            dtype=np.float32,
-        )
+        # read_points returns a structured array {x: f4, y: f4, z: f4} — stack into (N, 3)
+        pts = pc2.read_points_numpy(pc_msg, field_names=('x', 'y', 'z'), skip_nans=True)
+        xyz = np.column_stack([pts['x'], pts['y'], pts['z']]).astype(np.float32)
 
         if xyz.shape[0] == 0:
             return
