@@ -29,10 +29,6 @@ print("RGB Camera K Matrix:")
 print(K)
 
 try:
-    # Skip frames to stabilize
-    for _ in range(30):
-        pipeline.wait_for_frames()
-
     frames = pipeline.wait_for_frames()
     aligned_frames = align.process(frames)
     
