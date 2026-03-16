@@ -47,7 +47,8 @@ while True:
     img = _img
 
     start = time()
-    coords, lane_exists = model(img)
+    raw_coords, _ = model(img, False)
+    coords, lane_exists = model(img, True)
     end = time()
 
     print(f"time: {(end - start) * 1000:.1f}ms")
