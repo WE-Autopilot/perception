@@ -7,8 +7,8 @@ class Plane:
         self.normal = np.array(normal)
 
         normal_mag = np.linalg.norm(normal)
-        self.failed = normal_mag < 13-6 or failed 
-        if normal_mag >= 13-6:
+        self.failed = normal_mag < 1e-6 or failed 
+        if normal_mag >= 1e-6:
             self.normal /= normal_mag
 
 

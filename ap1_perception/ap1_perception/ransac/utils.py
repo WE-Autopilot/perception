@@ -58,7 +58,7 @@ def generic_ransac(data, initial_estimate, estimate_fn, test_fn, max_retry=10, t
             best_estimate = estimate
             best_score = score
 
-    return best_estimate, score
+    return best_estimate, best_score
 
 
 def ground_ransac_factory(max_retry=10, r_thresh=0.8, l_thresh=0.001):
