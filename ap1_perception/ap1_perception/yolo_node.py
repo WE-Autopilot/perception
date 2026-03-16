@@ -89,14 +89,13 @@ class YoloNode(Node):
         self.get_logger().info("Camera intrinsics received — YOLO node ready.")
 
     def _sync_callback(self, color_msg: Image, pc_msg: PointCloud2) -> None:
-        if self._K is None:
+        if self._K is None or self._model is None:
             return
 
         color = self._bridge.imgmsg_to_cv2(color_msg, desired_encoding='rgb8')
 
-        # read_points returns a structured array {x: f4, y: f4, z: f4} — stack into (N, 3)
-        pts = pc2.read_points_numpy(pc_msg, field_names=('x', 'y', 'z'), skip_nans=True)
-        xyz = np.column_stack([pts['x'], pts['y'], pts['z']]).astype(np.float32)
+        # read_points_numpy returns a plain (N, 3) float array directly
+        xyz = pc2.read_points_numpy(pc_msg, field_names=('x', 'y', 'z'), skip_nans=True).astype(np.float32)
 
         if xyz.shape[0] == 0:
             return
