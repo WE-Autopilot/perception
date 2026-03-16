@@ -100,14 +100,17 @@ class UFLDONNX:
         return [coords[2], coords[0][::-1], coords[1], coords[3]]
 
     def lane_lerp(self, coords):
+        print("\nstarting")
         coords = np.array(coords)
-        ys = coords[:, 0]
-        y_bounds = np.linspace(ys.min(), ys.max(), self.num_wps + 1)
+        xs, ys = coords.T
+        smooth_ys = np.linspace(ys.min(), ys.max(), self.num_wps)
 
         smooth_coords = []
-        for y_beg, y_end in zip(y_bounds[:-1], y_bounds[1:]):
-            points = coords[(ys >= y_beg) & (ys <= y_end)]
-            smooth_coords.append(points.mean(axis=0))
+        for smooth_y in smooth_ys:
+            weights = 1 / ((ys - smooth_y) ** 2 + 1)
+            weights /= weights.sum()
+            smooth_x = (xs * weights).sum()
+            smooth_coords.append((smooth_x, smooth_y))
 
         return smooth_coords
 
@@ -146,11 +149,12 @@ class UFLDONNX:
                  for name, out in zip(self.output_names, outputs)}
 
         coords = self.pred2coords(preds)
-        smooth_coords, lane_exists = self.smooth_anchors(coords)
 
-        if smooth:
-            return smooth_coords, lane_exists
-        return coords, lane_exists
+        if not smooth:
+            return coords, [1, 1, 1, 1]
+
+        smooth_coords, lane_exists = self.smooth_anchors(coords)
+        return smooth_coords, lane_exists
 
 
 def _load_config(config_path):
