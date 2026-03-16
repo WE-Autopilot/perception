@@ -5,11 +5,15 @@ from launch import LaunchDescription
 from launch.actions import SetEnvironmentVariable
 from launch_ros.actions import Node
 
-# Walk up from this file: launch/ -> ap1_perception/ -> workspace root
-_WORKSPACE = Path(__file__).resolve().parent.parent.parent
+# Walk up the directory tree from this file until we find the workspace root (contains .venv)
+def _find_venv_site_packages() -> Path:
+    for parent in Path(__file__).resolve().parents:
+        candidate = parent / '.venv' / 'lib'
+        if candidate.exists():
+            return next(candidate.glob('python3*/site-packages'))
+    raise RuntimeError('Could not find .venv — is the workspace set up correctly?')
 
-# Resolve the site-packages dir without hardcoding the Python version
-_SITE_PACKAGES = next((_WORKSPACE / '.venv' / 'lib').glob('python3*/site-packages'))
+_SITE_PACKAGES = _find_venv_site_packages()
 
 
 def generate_launch_description():
