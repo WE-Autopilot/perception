@@ -53,7 +53,7 @@ def box_select_points(K, points, boxes):
     item_centroids = []
     for box in boxes:
         mask = check_box(coords, box)
-        item_points = coords[mask]
+        item_points = points[mask]
         item_centroid = get_centroid(item_points)
         item_centroids.append(item_centroid)
 
