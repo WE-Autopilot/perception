@@ -24,6 +24,7 @@ setup(
     },
     entry_points={
         'console_scripts': [
+            'yolo_node = ap1_perception.yolo_node:main',
         ],
     },
 )
