@@ -18,7 +18,7 @@ COLOR_TOPIC = "camera/camera/color/image_raw"
 PC_TOPIC = "/camera/camera/depth/color/points"
 INFO_TOPIC = "camera/camera/aligned_depth_to_color/camera_info"
 
-PUBLISH_TOPIC = "perception/stop_signs"
+PUBLISH_TOPIC = "perception/entities"
 
 
 def normal_to_quaternion(normal: np.ndarray) -> tuple[float, float, float, float]:
