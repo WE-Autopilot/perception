@@ -64,7 +64,7 @@ def ransac_plane_normal(points: np.ndarray) -> np.ndarray:
 
 class YoloNode(Node):
     def __init__(self):
-        super().__init__('ap1_perception')
+        super().__init__('ap1_perception_yolo')
 
         self._bridge = CvBridge()
         self._K: np.ndarray | None = None
