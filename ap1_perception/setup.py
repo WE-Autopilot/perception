@@ -10,7 +10,10 @@ setup(
         ('share/ament_index/resource_index/packages',
             ['resource/' + package_name]),
         ('share/' + package_name, ['package.xml']),
-        ('share/' + package_name + '/launch', ['launch/yolo.launch.py']),
+        ('share/' + package_name + '/launch', [
+            'launch/yolo.launch.py',
+            'launch/ufld_ground.launch.py',
+        ]),
     ],
     install_requires=['setuptools'],
     zip_safe=True,
@@ -26,6 +29,7 @@ setup(
     entry_points={
         'console_scripts': [
             'yolo_node = ap1_perception.yolo_node:main',
+            'ufld_ground_node = ap1_perception.ufld_ground_node:main',
         ],
     },
 )
