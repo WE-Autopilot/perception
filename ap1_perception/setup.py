@@ -15,6 +15,9 @@ setup(
             'launch/ufld_ground.launch.py',
         ]),
     ],
+    package_data={
+        package_name: ['ufld/model.onnx', 'ufld/config.py'],
+    },
     install_requires=['setuptools'],
     zip_safe=True,
     maintainer='tygo',
