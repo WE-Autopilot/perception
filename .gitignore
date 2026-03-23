@@ -214,3 +214,8 @@ StopSignDetection_YOLO/runs/
 runs/
 .env
 .DS_Store
+
+# colcon build stuff
+/build
+/install
+/log
