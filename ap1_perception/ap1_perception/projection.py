@@ -48,11 +48,18 @@ def get_centroid(points):
 
 
 def box_select_points(K, points, boxes):
+    if len(boxes) == 0:
+        return np.zeros((0, 3))
+
     coords = pointcloud_to_pixel(K, points)
 
     item_centroids = []
     for box in boxes:
         mask = check_box(coords, box)
+        if mask.sum() == 0:
+            item_centroids.append(np.zeros(3))
+            continue
+
         item_points = points[mask]
         item_centroid = get_centroid(item_points)
         item_centroids.append(item_centroid)
