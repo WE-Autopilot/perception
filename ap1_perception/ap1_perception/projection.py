@@ -13,9 +13,9 @@ def pointcloud_to_pixel(K, points):
 def get_dir_vec(K, coords):
     K_inv = np.linalg.inv(K)
     pad = np.ones(coords.shape[:-1] + (1,))
-    pixels = np.concat((coords, pad), axis=-1)
+    pixels = np.concatenate((coords, pad), axis=-1)
     d = pixels @ K_inv.T
-    norm_d = d / np.linalg.norm(d)
+    norm_d = d / np.linalg.norm(d, axis=-1, keepdims=True)
     return norm_d
 
 
@@ -25,6 +25,35 @@ def get_plane_inter(rays, plane, ray_disp=0):
     factor = (point @ normal) / (rays @ normal)
     inter = rays * factor[..., None] + ray_disp
     return inter
+
+
+def get_point_proj(points, plane):
+    normal = plane.normal
+    point = plane.point
+    dist = (points - point) @ normal / (normal @ normal)
+    proj = points - dist[..., None] * normal
+    return proj
+
+
+def get_horizon(plane, length=16, dir_vec=np.array([0, 0, 1])):
+    p0 = get_point_proj(np.zeros(3), plane)
+    n = plane.normal
+
+    # Project dir_vec onto plane
+    dir_proj = dir_vec - (dir_vec @ n / (n @ n)) * n
+    dir_unit = dir_proj / np.linalg.norm(dir_proj)
+
+    p_mid = p0 + length * dir_unit
+
+    # Perpendicular direction on plane
+    perp_dir = np.cross(n, dir_unit)
+    perp_dir = perp_dir / np.linalg.norm(perp_dir)
+
+    # Return two points defining the segment
+    p1 = p_mid - length * perp_dir
+    p2 = p_mid + length * perp_dir
+
+    return np.stack([p1, p2])
 
 
 def check_box(coords, box):

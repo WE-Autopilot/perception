@@ -100,7 +100,6 @@ class UFLDONNX:
         return [coords[2], coords[0][::-1], coords[1], coords[3]]
 
     def lane_lerp(self, coords):
-        print("\nstarting")
         coords = np.array(coords)
         xs, ys = coords.T
         smooth_ys = np.linspace(ys.min(), ys.max(), self.num_wps)

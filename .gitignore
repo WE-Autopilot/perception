@@ -219,6 +219,11 @@ runs/
 /build
 /install
 /log
+
 # Perception frames and videos
 ap1_perception/ap1_perception/yolo_frames/*.png
 ap1_perception/ap1_perception/yolo_frames/*.mp4
+ap1_perception/ap1_perception/ufld_frames/*.png
+ap1_perception/ap1_perception/ufld_frames/*.mp4
+ap1_perception/ap1_perception/ufld_2d_frames/*.png
+ap1_perception/ap1_perception/ufld_2d_frames/*.mp4

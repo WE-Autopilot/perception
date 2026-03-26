@@ -13,7 +13,7 @@ class UFLD:
         if K is None:
             K = self.K
 
-        wp = self.ufld_onnx(img, smooth)
+        wp, lane_exists = self.ufld_onnx(img, smooth)
         points = ground_proj(K, wp, plane, ray_disp)
 
-        return points
+        return points, lane_exists

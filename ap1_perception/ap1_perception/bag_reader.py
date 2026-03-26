@@ -1,6 +1,7 @@
 import pyrealsense2 as rs
 import numpy as np
 import matplotlib.pyplot as plt
+import datetime
 
 
 class BagReader:
@@ -55,7 +56,7 @@ class BagReader:
         if not self.is_running:
             self._setup_pipeline()
         else:
-            self.playback.seek(0)
+            self.playback.seek(datetime.timedelta(0))
 
     def __iter__(self):
         return self
