@@ -7,9 +7,11 @@ import sys
 from pathlib import Path
 import importlib.util
 
+from ..projection import pointcloud_to_pixel, get_horizon
+
 
 class UFLDONNX:
-    def __init__(self, ori_size, onnx_path=None, config_path=None, num_wps=16, wp_thresh=16):
+    def __init__(self, ori_size, onnx_path=None, config_path=None, num_wps=16, wp_thresh=16, horizon_dist=16):
         if onnx_path == None or config_path == None:
             curr_path = Path(__file__).resolve().parent
 
@@ -28,6 +30,7 @@ class UFLDONNX:
 
         self.num_wps = num_wps
         self.wp_thresh = wp_thresh
+        self.horizon_dist = horizon_dist
 
         cfg = _load_config(config_path)
         self.ori_img_w, self.ori_img_h = ori_size
@@ -99,10 +102,16 @@ class UFLDONNX:
         # kinda cooked you gotta do this
         return [coords[2], coords[0][::-1], coords[1], coords[3]]
 
-    def lane_lerp(self, coords):
+    def lane_lerp(self, coords, m, b):
         coords = np.array(coords)
         xs, ys = coords.T
-        smooth_ys = np.linspace(ys.min(), ys.max(), self.num_wps)
+
+        # Horizon y-capping: Use the "lowest" (largest y) point of the horizon 
+        # over the lane's x-range to ensure safety.
+        y_cap = max(m * xs.min() + b, m * xs.max() + b)
+
+        y_min = max(ys.min(), y_cap)
+        smooth_ys = np.linspace(y_min, ys.max(), self.num_wps)
 
         smooth_coords = []
         for smooth_y in smooth_ys:
@@ -113,7 +122,7 @@ class UFLDONNX:
 
         return smooth_coords
 
-    def smooth_anchors(self, coords):
+    def smooth_anchors(self, coords, m, b):
         smooth_coords = []
         lane_exists = []
 
@@ -123,11 +132,11 @@ class UFLDONNX:
                 smooth_coords.append([[0, 0] for _ in range(self.num_wps)])
                 continue
 
-            smooth_coords.append(self.lane_lerp(lane_coords))
+            smooth_coords.append(self.lane_lerp(lane_coords, m, b))
 
         return np.array(smooth_coords, dtype=np.int64), lane_exists
 
-    def __call__(self, img, smooth=True):
+    def __call__(self, img, smooth=True, m=0, b=0):
         im0 = img.copy()
 
         # ---- PREPROCESSING ----
@@ -152,7 +161,7 @@ class UFLDONNX:
         if not smooth:
             return coords, [1, 1, 1, 1]
 
-        smooth_coords, lane_exists = self.smooth_anchors(coords)
+        smooth_coords, lane_exists = self.smooth_anchors(coords, m, b)
         return smooth_coords, lane_exists
 
 
@@ -163,4 +172,3 @@ def _load_config(config_path):
     cfg_module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(cfg_module)
     return cfg_module
-

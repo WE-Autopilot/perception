@@ -9,11 +9,12 @@ from time import time
 from .bag_reader import BagReader
 from .ufld import UFLD
 from .ransac import GroundRANSAC, Plane
+from .projection import pointcloud_to_pixel, get_horizon
 
-def visualize_results(img, points, colors, lane_points, lane_exists, lane_2d, plane, file_name, stride=20, max_d=16):
+def visualize_results(img, points, colors, lane_points, lane_exists, lane_2d, plane, K, file_name, stride=20, max_d=16):
     fig = plt.figure(figsize=(18, 8))
     
-    # 3D Plot (Matching yolo_test style)
+    # 3D Plot
     ax1 = fig.add_subplot(121, projection='3d')
     
     sampled_points = points[::stride]
@@ -59,6 +60,13 @@ def visualize_results(img, points, colors, lane_points, lane_exists, lane_2d, pl
     ax2 = fig.add_subplot(122)
     ax2.imshow(img)
     
+    # --- Horizon Line ---
+    if not plane.failed:
+        horizon_3d = get_horizon(plane)
+        if (horizon_3d[:, 2] > 0.1).all():
+            horizon_2d = pointcloud_to_pixel(K, horizon_3d)
+            ax2.plot(horizon_2d[:, 0], horizon_2d[:, 1], color='salmon', alpha=0.8, linewidth=2)
+
     # Visualize Lanes in 2D
     for i, (lane, exists) in enumerate(zip(lane_2d, lane_exists)):
         if exists:
@@ -66,7 +74,9 @@ def visualize_results(img, points, colors, lane_points, lane_exists, lane_2d, pl
             lx, ly = lane.T
             ax2.plot(lx, ly, color=lane_colors[i % len(lane_colors)], linewidth=2)
 
-    ax2.set_title('Lane Detection')
+    h, w = img.shape[:2]
+    ax2.set_xlim(0, w)
+    ax2.set_ylim(h, 0)
     ax2.axis('off')
 
     plt.tight_layout()
@@ -88,7 +98,8 @@ if __name__ == "__main__":
         break
     reader.restart()
     
-    ufld = UFLD(ori_size=(w, h), K=reader.get_K())
+    K = reader.get_K()
+    ufld = UFLD(ori_size=(w, h), K=K)
     
     output_dir = "ap1_perception/ufld_frames"
     os.makedirs(output_dir, exist_ok=True)
@@ -101,17 +112,32 @@ if __name__ == "__main__":
         # 1. Estimate ground plane
         plane = ransac(points)
         
+        # Calculate horizon slope (m) and intercept (b)
+        m, b = 0, 0
+        if not plane.failed:
+            horizon_3d = get_horizon(plane)
+            if (horizon_3d[:, 2] > 0.1).all():
+                horizon_2d = pointcloud_to_pixel(K, horizon_3d)
+                x1, y1 = horizon_2d[0]
+                x2, y2 = horizon_2d[1]
+                if abs(x2 - x1) > 1e-6:
+                    m = (y2 - y1) / (x2 - x1)
+                    b = y1 - m * x1
+                else:
+                    m = 0
+                    b = y1
+
         # 2. Run UFLD (Timing model inference specifically)
         model_start = time()
         # We need the 2D coordinates for the 2D plot
-        lane_2d, lane_exists = ufld.ufld_onnx(img)
+        lane_2d, lane_exists = ufld.ufld_onnx(img, m=m, b=b)
         # We need the 3D points from the projection
         lane_points, _ = ufld(img, plane)
         model_time += time() - model_start
         
         # 3. Visualize
         file_name = os.path.join(output_dir, f"frame{i:04d}.png")
-        visualize_results(img, points, colors, lane_points, lane_exists, lane_2d, plane, file_name, 10, 16)
+        visualize_results(img, points, colors, lane_points, lane_exists, lane_2d, plane, K, file_name, 10, 16)
         
     end = time()
     print(f"Visualized {i + 1} frames in {end - start:.2f} seconds.")

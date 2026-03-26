@@ -123,8 +123,23 @@ if __name__ == "__main__":
         # 1. Estimate ground plane
         plane = ransac(points)
         
-        # 2. Run UFLD 2D detection
-        lane_2d, lane_exists = ufld.ufld_onnx(img)
+        # Calculate horizon slope (m) and intercept (b)
+        m, b = 0, 0
+        if not plane.failed:
+            horizon_3d = get_horizon(plane)
+            if (horizon_3d[:, 2] > 0.1).all():
+                horizon_2d = pointcloud_to_pixel(K, horizon_3d)
+                x1, y1 = horizon_2d[0]
+                x2, y2 = horizon_2d[1]
+                if abs(x2 - x1) > 1e-6:
+                    m = (y2 - y1) / (x2 - x1)
+                    b = y1 - m * x1
+                else:
+                    m = 0
+                    b = y1
+        
+        # 2. Run UFLD 2D detection with horizon capping
+        lane_2d, lane_exists = ufld.ufld_onnx(img, m=m, b=b)
         
         # 3. Visualize
         file_name = os.path.join(output_dir, f"frame{i:04d}.png")
