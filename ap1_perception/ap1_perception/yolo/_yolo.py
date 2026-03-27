@@ -16,7 +16,7 @@ class YOLO:
 
     
     def forward(self, img):
-        results = self.model(img, classes=[11], verbose=False)[0]
+        results = self.model(img, classes=self.classes, verbose=False)[0]
         img_cls = results.boxes.cls.cpu().numpy()
         boxes = results.boxes.xyxy.cpu().numpy()
         return boxes, img_cls
