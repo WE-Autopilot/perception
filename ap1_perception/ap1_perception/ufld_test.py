@@ -50,11 +50,12 @@ def visualize_results(img, points, colors, lane_points, lane_exists, lane_2d, pl
     ax1.set_title('3D Lanes & Ground Plane')
     
     # Match yolo_test view and limits
-    ax1.view_init(elev=60, azim=15, vertical_axis='y')
+    ax1.view_init(elev=15, azim=15, vertical_axis='y')
     ax1.invert_zaxis()
     ax1.set_xlim(-max_d, max_d)
     ax1.set_ylim(-max_d, max_d)
-    ax1.set_zlim(max_d, 0)
+    ax1.set_zlim(2*max_d, 0)
+    ax1.set_aspect('equal')
 
     # 2D Plot
     ax2 = fig.add_subplot(122)

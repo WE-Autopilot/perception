@@ -51,7 +51,8 @@ def visualize_results(img, points, colors, boxes, classes, poses, file_name, str
     # Explicitly set your desired axis limits here
     ax1.set_xlim(-max_d, max_d)
     ax1.set_ylim(-max_d, max_d)
-    ax1.set_zlim(max_d, 0)
+    ax1.set_zlim(2*max_d, 0)
+    ax1.set_aspect('equal')
 
     ax2 = fig.add_subplot(122)
     ax2.imshow(img)
