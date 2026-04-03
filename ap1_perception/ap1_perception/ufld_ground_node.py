@@ -31,8 +31,10 @@ COLOR_TOPIC = "camera/camera/color/image_raw"
 PC_TOPIC    = "/camera/camera/depth/color/points"
 INFO_TOPIC  = "camera/camera/aligned_depth_to_color/camera_info"
 
-LANE_TOPIC  = "perception/lane_boundaries"
-PLANE_TOPIC = "perception/ground_plane"
+#LANE_TOPIC  = "perception/lane_boundaries"
+#PLANE_TOPIC = "perception/ground_plane"
+LANE_TOPIC  = "ap1/perception/lanes"
+PLANE_TOPIC = "ap1/perception/ground_plane"
 
 
 class UfldGroundNode(Node):
