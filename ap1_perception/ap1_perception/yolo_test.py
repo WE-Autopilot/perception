@@ -2,34 +2,39 @@ from .bag_reader import BagReader
 from .yolo import YOLO
 import matplotlib
 import numpy as np
+from tqdm import tqdm
+from time import time
 
 # Using Agg for headless or problematic environments
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 from matplotlib.patches import Rectangle
 
-def visualize_results(img, points, boxes, classes, poses, stride=20):
+def visualize_results(img, points, colors, boxes, classes, poses, file_name, stride=20, max_d=16):
+
     fig = plt.figure(figsize=(18, 8))
     
     ax1 = fig.add_subplot(121, projection='3d')
     
     sampled_points = points[::stride]
+    sampled_colors = colors[::stride]
     
-    x, y, z = sampled_points[:, 0], sampled_points[:, 1], sampled_points[:, 2]
+    x, y, z = sampled_points.T
     
-    sc = ax1.scatter(x, -y, z, s=1, c=z, cmap='viridis', alpha=1)
-    
-    cbar = plt.colorbar(sc, ax=ax1, pad=0.1)
-    cbar.set_label('Depth (Z) in meters')
+    # Flip Y for visualization (so "up" is positive)
+    sc = ax1.scatter(x, -y, z, s=1, c=sampled_colors, alpha=1)
     
     if len(poses) > 0:
-        px, py, pz = poses[:, 0], poses[:, 1], poses[:, 2]
+        data_mask = (poses != 0).any(axis=-1)
+        px, py, pz = poses[data_mask].T
         
+        # Flip Y for visualization (so "up" is positive)
         ax1.scatter(px, -py, pz, marker='+', s=10000, c='red', linewidths=2, 
                     label='Detected Poses', zorder=100)
         
-        for i, label_id in enumerate(classes):
+        for i, label_id in enumerate(classes[data_mask]):
             label_text = str(int(label_id))
+            # Flip Y for visualization
             ax1.text(px[i], -py[i], pz[i], label_text, color='red', 
                      fontsize=14, fontweight='bold', zorder=101)
 
@@ -38,17 +43,16 @@ def visualize_results(img, points, boxes, classes, poses, stride=20):
     ax1.set_zlabel('Z (Depth)')
     ax1.set_title('3D Point Cloud & Object Poses')
 
-    ax1.view_init(elev=90, azim=-90)
+    ax1.view_init(elev=15, azim=15, vertical_axis='y')
 
-    all_pts = np.vstack([sampled_points, poses]) if len(poses) > 0 else sampled_points
-    ax_x, ax_y, ax_z = all_pts[:, 0], -all_pts[:, 1], all_pts[:, 2]
-    
-    max_range = np.array([ax_x.max()-ax_x.min(), ax_y.max()-ax_y.min(), ax_z.max()-ax_z.min()]).max() / 2.0
-    mid_x, mid_y, mid_z = (ax_x.max()+ax_x.min())*0.5, (ax_y.max()+ax_y.min())*0.5, (ax_z.max()+ax_z.min())*0.5
-    
-    ax1.set_xlim(mid_x - max_range, mid_x + max_range)
-    ax1.set_ylim(mid_y - max_range, mid_y + max_range)
-    ax1.set_zlim(mid_z - max_range, mid_z + max_range)
+    # Flip the Z-axis
+    ax1.invert_zaxis()
+
+    # Explicitly set your desired axis limits here
+    ax1.set_xlim(-max_d, max_d)
+    ax1.set_ylim(-max_d, max_d)
+    ax1.set_zlim(2*max_d, 0)
+    ax1.set_aspect('equal')
 
     ax2 = fig.add_subplot(122)
     ax2.imshow(img)
@@ -64,20 +68,32 @@ def visualize_results(img, points, boxes, classes, poses, stride=20):
     ax2.axis('off')
 
     plt.tight_layout()
-    plt.savefig('detection_result.png')
-    print("Result saved to detection_result.png")
+    plt.savefig(file_name)
     plt.show()
+    plt.close()
+
 
 # Execution logic
-reader = BagReader("ap1_perception/test.bag")
+reader = BagReader("ap1_perception/bags/test1.bag")
 yolo = YOLO(classes=None, K=reader.get_K())
 
 # Grab frames
-img, points = next(reader)
+model_time = 0
+start = time()
+for i, (img, points, colors) in tqdm(enumerate(reader), total=len(reader), desc="Processing", unit="frames"):
 
-# Inference
-boxes, _ = yolo.forward(img)
-poses, classes = yolo(img, points)
+    # Inference
+    boxes, _ = yolo.forward(img)
+    model_start = time()
+    poses, classes = yolo(img, points)
+    model_time += time() - model_start
+    #print(poses)
+    #print(classes)
 
-print(f"Detected Classes: {[int(c) for c in classes]}")
-visualize_results(img, points, boxes, classes, poses)
+    #print(f"Detected Classes: {[int(c) for c in classes]}")
+    file_name = f"ap1_perception/yolo_frames/frame{i:04}.png"
+    visualize_results(img, points, colors, boxes, classes, poses, file_name, 10, 16)
+    #print(f"Result saved to {file_name}")
+end = time()
+print(f"Visualized {i + 1} frames in {end - start:.2f} seconds.")
+print(f"Processed {i + 1} frames in {model_time:.2f} seconds.")

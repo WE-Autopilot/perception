@@ -15,5 +15,6 @@ dependencies = [
     "pyqt5>=5.15.11",
     "pyrealsense2>=2.56.5.9235",
     "torch==2.10.0",
+    "tqdm>=4.67.3",
     "ultralytics>=8.4.18",
 ]
