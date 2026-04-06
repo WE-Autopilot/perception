@@ -6,6 +6,7 @@ from geometry_msgs.msg import PoseArray, PoseStamped
 from message_filters import Subscriber, ApproximateTimeSynchronizer
 from cv_bridge import CvBridge
 import sensor_msgs_py.point_cloud2 as pc2
+from ap1_msgs.msg import EntityStateArray, EntityState
 
 from .yolo import YOLO
 from .projection import pointcloud_to_pixel, check_box
@@ -71,7 +72,7 @@ class YoloNode(Node):
         self._K: np.ndarray | None = None
         self._model: YOLO | None = None
 
-        self._pub = self.create_publisher(PoseArray, PUBLISH_TOPIC, 10)
+        self._pub = self.create_publisher(EntityStateArray, PUBLISH_TOPIC, 10)
 
         self.create_subscription(CameraInfo, INFO_TOPIC, self._camera_info_callback, 10)
 
@@ -108,6 +109,31 @@ class YoloNode(Node):
 
         pixel_coords = pointcloud_to_pixel(self._K, xyz)  # (N, 2)
 
+        # aly edit
+        # changing this PoseArray to EntityStateArray
+        # == ENTITYSTATEARRAY START
+        entity_array = EntityStateArray()
+        entity_array.header = color_msg.header
+        for box in boxes:
+            mask = check_box(pixel_coords, box)
+            box_xyz = xyz[mask]
+            if len(box_xyz) < 3:
+                continue
+            centroid = np.median(box_xyz, axis=0)
+            normal = ransac_plane_normal(box_xyz)
+            qx, qy, qz, qw = normal_to_quaternion(normal)
+            # convert quaternion to yaw angle (gamma)
+            gamma = 2.0 * np.arctan2(qz, qw)
+            entity = EntityState()
+            entity.x     = float(centroid[0])
+            entity.y     = float(centroid[1])
+            entity.z     = float(centroid[2])
+            entity.gamma = float(gamma)
+            entity_array.entities.append(entity)
+        self._pub.publish(entity_array)
+        return
+        # == ENTITYSTATEARRAY END
+        # old code:
         pose_array = PoseArray()
         pose_array.header = color_msg.header
 
