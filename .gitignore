@@ -227,3 +227,6 @@ ap1_perception/ap1_perception/ufld_frames/*.png
 ap1_perception/ap1_perception/ufld_frames/*.mp4
 ap1_perception/ap1_perception/ufld_2d_frames/*.png
 ap1_perception/ap1_perception/ufld_2d_frames/*.mp4
+
+# ignore onnx files
+*.onnx
