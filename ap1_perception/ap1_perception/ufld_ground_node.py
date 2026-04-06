@@ -8,6 +8,8 @@ from message_filters import Subscriber, ApproximateTimeSynchronizer
 from cv_bridge import CvBridge
 import sensor_msgs_py.point_cloud2 as pc2
 
+from ap1_msgs.msg import LaneBoundaries
+
 from .ufld import UFLDONNX
 from .ransac import GroundRANSAC
 from .projection import ground_proj
@@ -46,7 +48,7 @@ class UfldGroundNode(Node):
         self._model: UFLDONNX | None = None
         self._ransac = GroundRANSAC()
 
-        self._lane_pub = self.create_publisher(PointCloud, LANE_TOPIC, 10)
+        self._lane_pub = self.create_publisher(LaneBoundaries, LANE_TOPIC, 10)
         self._plane_pub = self.create_publisher(PlaneMsg, PLANE_TOPIC, 10)
 
         self.create_subscription(CameraInfo, INFO_TOPIC, self._camera_info_callback, 10)
@@ -92,6 +94,20 @@ class UfldGroundNode(Node):
         frame = self._bridge.imgmsg_to_cv2(color_msg, desired_encoding='rgb8')
         smooth_coords, lane_exists = self._model(frame)
 
+        # aly edit
+        # swapping PointCloud out for LaneBoundaries
+        # === START LANEBOUNDARIES
+        lane_boundaries_msg = self.create_lane_boundaries_message(
+                zip(smooth_coords, lane_exists), plane
+        )
+        if lane_boundaries_msg is not None:
+            self._lane_boundaries_pub.publish(lane_boundaries_msg)
+        else:
+            print("Your lane boundaries are null twin")
+        return
+        # === END LANEBOUNDARIES
+        # this is the other Pointcloud code
+
         cloud = PointCloud()
         cloud.header = color_msg.header
         lane_id_channel = ChannelFloat32(name='lane_id', values=[])
@@ -114,6 +130,34 @@ class UfldGroundNode(Node):
         cloud.channels.append(lane_id_channel)
         self._lane_pub.publish(cloud)
 
+    def create_lane_boundaries_message(self, lanes, plane):
+        lanes = list(lanes) # materialise the zip iterator
+
+        left_coords, left_exists = lanes[0]
+        if not left_exists:
+            return None
+        right_coords, right_exists = lanes[1]
+        if not right_exists:
+            return None
+
+        # lanes in pixel coords
+        left_lane_px = np.array(left_coords, dtype=np.float64)
+        right_lane_px = np.array(right_coords, dtype=np.float64)
+
+        # lanes in 3d coords
+        left_pts_3d = ground_proj(self._K, left_lane_px, plane)
+        right_pts_3d = ground_proj(self._K, right_lane_px, plane)
+
+        # assemble LaneBoundaries
+        msg = LaneBoundaries()
+        msg.header.stamp = self.get_clock().now().to_msg()
+        msg.header.frame_id = 'base_link'
+
+        msg.left = [Point(x=float(pt[0]), y=float(pt[1]), z=float(pt[2])) for pt in left_pts_3d]
+
+        msg.right = [Point(x=float(pt[0]), y=float(pt[1]), z=float(pt[2])) for pt in right_pts_3d]
+
+        return msg
 
 def main(args=None):
     rclpy.init(args=args)
