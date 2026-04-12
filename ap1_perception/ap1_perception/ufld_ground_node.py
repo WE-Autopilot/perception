@@ -101,7 +101,7 @@ class UfldGroundNode(Node):
                 zip(smooth_coords, lane_exists), plane
         )
         if lane_boundaries_msg is not None:
-            self._lane_boundaries_pub.publish(lane_boundaries_msg)
+            self._lane_pub.publish(lane_boundaries_msg)
         else:
             print("Your lane boundaries are null twin")
         return
