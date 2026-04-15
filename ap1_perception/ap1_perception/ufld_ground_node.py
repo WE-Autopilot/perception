@@ -15,17 +15,7 @@ from .ransac import GroundRANSAC
 from .projection import ground_proj
 
 """
-MAJOR CHANGE FROM FINAL INTERFACE DOC:
-Going to use: sensor_msgs/PointCloud since PointStampedArray doesn't exist.
-Basically will be a pointcloud representation of the lane boundaries.
-
-The advantage this gives us:
-1) Built in message type that ROS understands
-2) Usage of channels field in the message type that gives us a built in way to
-assign lane IDs, rgb, and confidence.
-
-Additionally, the node will publish the estimated ground plane as shape_msgs/Plane which represents a plane using [a, b, c, d] from the plane equation: 
-ax + by + cz + d = 0
+Perception lane detection (model = ultra fast lane detection v2) and ground plane (ransac) ROS2 node.
 """
 
 DEPTH_TOPIC = "camera/camera/aligned_depth_to_color/image_raw"
@@ -33,8 +23,6 @@ COLOR_TOPIC = "camera/camera/color/image_raw"
 PC_TOPIC    = "/camera/camera/depth/color/points"
 INFO_TOPIC  = "camera/camera/aligned_depth_to_color/camera_info"
 
-#LANE_TOPIC  = "perception/lane_boundaries"
-#PLANE_TOPIC = "perception/ground_plane"
 LANE_TOPIC  = "ap1/perception/lanes"
 PLANE_TOPIC = "ap1/perception/ground_plane"
 
@@ -154,7 +142,6 @@ class UfldGroundNode(Node):
         msg.header.frame_id = 'base_link'
 
         msg.left = [Point(x=float(pt[0]), y=float(pt[1]), z=float(pt[2])) for pt in left_pts_3d]
-
         msg.right = [Point(x=float(pt[0]), y=float(pt[1]), z=float(pt[2])) for pt in right_pts_3d]
 
         return msg
