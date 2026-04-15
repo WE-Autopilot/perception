@@ -27,6 +27,13 @@ LANE_TOPIC  = "ap1/perception/lanes"
 PLANE_TOPIC = "ap1/perception/ground_plane"
 
 
+def cam_optical_to_base_link(pts_cam: np.ndarray) -> np.ndarray:
+    # ROS camera optical (+X right, +Y down, +Z forward) -> base_link (+X fwd, +Y left, +Z up).
+    # Pure rotation; assumes camera is mounted straight ahead with no roll/pitch/yaw offset.
+    x_cam, y_cam, z_cam = pts_cam[:, 0], pts_cam[:, 1], pts_cam[:, 2]
+    return np.stack([z_cam, -x_cam, -y_cam], axis=-1)
+
+
 class UfldGroundNode(Node):
     def __init__(self):
         super().__init__('ap1_perception_ufld_ground')
@@ -121,10 +128,12 @@ class UfldGroundNode(Node):
     def create_lane_boundaries_message(self, lanes, plane):
         lanes = list(lanes) # materialise the zip iterator
 
-        left_coords, left_exists = lanes[0]
+        # UFLDONNX.pred2coords returns [outer-left, inner-left, inner-right, outer-right];
+        # the ego-lane boundaries are indices 1 and 2.
+        left_coords, left_exists = lanes[1]
         if not left_exists:
             return None
-        right_coords, right_exists = lanes[1]
+        right_coords, right_exists = lanes[2]
         if not right_exists:
             return None
 
@@ -132,9 +141,14 @@ class UfldGroundNode(Node):
         left_lane_px = np.array(left_coords, dtype=np.float64)
         right_lane_px = np.array(right_coords, dtype=np.float64)
 
-        # lanes in 3d coords
-        left_pts_3d = ground_proj(self._K, left_lane_px, plane)
-        right_pts_3d = ground_proj(self._K, right_lane_px, plane)
+        # lanes in camera-optical 3d coords (+X right, +Y down, +Z forward)
+        left_pts_cam = ground_proj(self._K, left_lane_px, plane)
+        right_pts_cam = ground_proj(self._K, right_lane_px, plane)
+
+        # Rotate into base_link (+X forward, +Y left, +Z up). TODO: add the camera's
+        # mounting translation (x forward of rear axle, z mount height) once known.
+        left_pts_3d = cam_optical_to_base_link(left_pts_cam)
+        right_pts_3d = cam_optical_to_base_link(right_pts_cam)
 
         # assemble LaneBoundaries
         msg = LaneBoundaries()
