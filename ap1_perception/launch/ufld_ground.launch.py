@@ -13,15 +13,22 @@ def _find_venv_site_packages() -> Path:
             return next(candidate.glob('python3*/site-packages'))
     raise RuntimeError('Could not find .venv — is the workspace set up correctly?')
 
-_SITE_PACKAGES = _find_venv_site_packages()
-
 
 def generate_launch_description():
-    return LaunchDescription([
-        SetEnvironmentVariable(
+    try:
+        site_packages = str(_find_venv_site_packages())
+    except RuntimeError:
+        site_packages = None
+
+    env_actions = (
+        [SetEnvironmentVariable(
             'PYTHONPATH',
-            str(_SITE_PACKAGES) + ':' + os.environ.get('PYTHONPATH', ''),
-        ),
+            site_packages + ':' + os.environ.get('PYTHONPATH', ''),
+        )]
+        if site_packages else []
+    )
+
+    return LaunchDescription(env_actions + [
         Node(
             package='ap1_perception',
             executable='ufld_ground_node',
