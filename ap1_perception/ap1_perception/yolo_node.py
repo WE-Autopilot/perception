@@ -102,9 +102,13 @@ class YoloNode(Node):
         if xyz.shape[0] == 0:
             return
 
+        entity_array = EntityStateArray()
+        entity_array.header = color_msg.header
+
         boxes, _ = self._model.forward(color)
 
         if boxes.shape[0] == 0:
+            self._pub.publish(entity_array)
             return
 
         pixel_coords = pointcloud_to_pixel(self._K, xyz)  # (N, 2)
@@ -112,8 +116,6 @@ class YoloNode(Node):
         # aly edit
         # changing this PoseArray to EntityStateArray
         # == ENTITYSTATEARRAY START
-        entity_array = EntityStateArray()
-        entity_array.header = color_msg.header
         for box in boxes:
             mask = check_box(pixel_coords, box)
             box_xyz = xyz[mask]
