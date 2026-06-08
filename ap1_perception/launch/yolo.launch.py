@@ -7,10 +7,30 @@ from launch_ros.actions import Node
 
 
 def _find_venv_site_packages() -> Path:
+    override = os.environ.get('AP1_PERCEPTION_VENV')
+    candidates = []
+    if override:
+        override_path = Path(override).expanduser()
+        candidates.extend([
+            override_path,
+            override_path / 'lib',
+        ])
+
     for parent in Path(__file__).resolve().parents:
-        candidate = parent / '.venv' / 'lib'
+        candidates.extend([
+            parent / '.venv' / 'lib',
+            parent / 'src' / 'perception' / '.venv' / 'lib',
+            parent / 'src' / 'src' / 'perception' / '.venv' / 'lib',
+        ])
+
+    for candidate in candidates:
+        if candidate.name == 'site-packages' and candidate.exists():
+            return candidate
         if candidate.exists():
-            return next(candidate.glob('python3*/site-packages'))
+            matches = sorted(candidate.glob('python3*/site-packages'))
+            if matches:
+                return matches[0]
+
     raise RuntimeError('Could not find .venv — is the workspace set up correctly?')
 
 
