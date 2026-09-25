@@ -6,10 +6,10 @@ import matplotlib.pyplot as plt
 from tqdm import tqdm
 from time import time
 
-from .bag_reader import BagReader
-from .ufld import UFLD
-from .ransac import GroundRANSAC, Plane
-from .projection import pointcloud_to_pixel, get_horizon
+from ap1_perception.bag_reader import BagReader
+from ap1_perception.ufld import UFLD
+from ap1_perception.ransac import GroundRANSAC, Plane
+from ap1_perception.projection import pointcloud_to_pixel, get_horizon
 
 def visualize_2d_results(img, lane_2d, lane_exists, plane, K, file_name):
     h, w = img.shape[:2]

@@ -3,8 +3,8 @@ import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import os
-from .bag_reader import BagReader
-from .projection import pointcloud_to_pixel
+from ap1_perception.bag_reader import BagReader
+from ap1_perception.projection import pointcloud_to_pixel
 
 def test_alignment():
     # Try multiple possible locations for the bag file

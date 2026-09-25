@@ -8,7 +8,7 @@ from ..projection import box_select_points
 class YOLO:
     def __init__(self, classes=[11], K=None, model_path=None):
         if model_path == None:
-            model_path = f"{Path(__file__).resolve().parent}/yolo11n.pt"
+            model_path = f"{Path(__file__).resolve().parent}/yolo11n.onnx"
 
         self.K = K
         self.model = _YOLO(model_path, verbose=False, task="detect")

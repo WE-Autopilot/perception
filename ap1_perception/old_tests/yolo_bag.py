@@ -1,5 +1,5 @@
-from .bag_reader import BagReader
-from .yolo import YOLO
+from ap1_perception.bag_reader import BagReader
+from ap1_perception.yolo import YOLO
 import matplotlib
 import numpy as np
 from tqdm import tqdm
