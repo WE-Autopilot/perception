@@ -15,9 +15,8 @@ setup(
             'launch/ufld_ground.launch.py',
         ]),
     ],
-    # ufld onnx stuff
     package_data={
-        package_name: ['ufld/model.onnx', 'ufld/config.py'],
+        package_name: ['ufld/model.onnx', 'yolo/yolo11n.onnx', 'ufld/config.py'],
     },
     install_requires=['setuptools'],
     zip_safe=True,
